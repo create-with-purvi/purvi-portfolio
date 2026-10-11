@@ -22,8 +22,8 @@ export const site = {
     threads: { handle: 'create.with.purvi', url: 'https://www.threads.com/@create.with.purvi' },
   },
   email: 'hello@purviagarwal.in',
-  whatsapp: '919999999999',
-  phoneDisplay: '+91 99999 99999',
+  whatsapp: '917974542654',
+  phoneDisplay: '+91 79745 42654',
   waText: "Hi Purvi! I saw your portfolio and I'd love to talk about my brand's social media.",
   available: true,
 }
