@@ -1,0 +1,17 @@
+.ig-ring {
+  background: conic-gradient(from 0deg, #f40816, #ff7a00, #ffb03a, #ff2d87, #c3168f, #f40816);
+  animation: ig-ring 4s linear infinite;
+  will-change: transform;
+}
+
+@keyframes ig-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ig-ring {
+    animation: none;
+  }
+}

@@ -1,0 +1,52 @@
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0) rotate(1.4deg);
+  }
+}
+
+.hero-float {
+  animation: hero-float 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-paused .hero-float {
+  animation-play-state: paused;
+}
+
+@keyframes hero-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+.hero-cue {
+  animation: hero-cue 2.2s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+}
+
+.hero-paused .hero-cue {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-float,
+  .hero-cue {
+    animation: none;
+  }
+}
