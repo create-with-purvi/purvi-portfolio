@@ -8,7 +8,7 @@ export const site = {
   region: 'Chhattisgarh, India',
   serviceArea: ['Raipur', 'Bhilai', 'Durg'],
   timezone: 'Asia/Kolkata',
-  instagram: { handle: 'purvi.creates', url: 'https://www.instagram.com/purvi.creates/' },
+  instagram: { handle: 'create.with.purvi', url: 'https://www.instagram.com/create.with.purvi/' },
   email: 'hello@purviagarwal.in',
   whatsapp: '919999999999',
   phoneDisplay: '+91 99999 99999',
