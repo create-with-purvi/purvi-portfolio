@@ -62,23 +62,6 @@ export const clients = [
   { name: 'Agrawal Surface Solution', instagram: '' },
 ]
 
-export type Reel = {
-  id: string
-  brand: string
-  caption: string
-  video?: string
-  poster: string
-  frames: string[]
-}
-
-export const reels: Reel[] = [
-  { id: 'r1', brand: 'ASP Cranes', caption: 'We lift you up 🏗️', poster: 'build-higher', frames: ['build-higher', 'impossible', 'steady-safe', 'guess-who-am-i'] },
-  { id: 'r2', brand: 'TICA Cricket Academy', caption: 'Summer camp is ON 🏏', poster: 'summer-camp', frames: ['summer-camp', 'har-khiladi', 'sapno-ko-hakikat', 'cricket-star'] },
-  { id: 'r3', brand: "Interior's World", caption: 'Walls that talk ✨', poster: 'uv-marble-walls', frames: ['uv-marble-walls', 'interiors-reflect', 'charcoal-panel', 'uv-marble-sheets'] },
-  { id: 'r4', brand: 'upGrad', caption: 'Your next chapter 🎓', poster: 'admission-open', frames: ['admission-open', 'focus-learning', 'still-thinking', 'better-tomorrow'] },
-  { id: 'r5', brand: 'DB Sons', caption: 'Festive, but make it dry fruits 🪔', poster: 'ganesh-chaturthi', frames: ['ganesh-chaturthi', 'guru-purnima', 'raksha-bandhan-db', 'gandhi-jayanti-db'] },
-]
-
 const media = (file: string) => `${import.meta.env.BASE_URL}media/${file}`
 
 export type RealReel = {

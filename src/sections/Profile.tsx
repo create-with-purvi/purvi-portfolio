@@ -10,12 +10,11 @@ import { ChevronDown, GridIcon, MenuIcon, MoreHIcon, PlusSquareIcon, ReelsIcon }
 
 const brandsStat = stats.find((s) => s.label === 'Brands')
 const industriesStat = stats.find((s) => s.label === 'Industries')
-const langStat = stats.find((s) => s.label === 'Languages')
 
 const MINI_STATS = [
-  { value: `${brandsStat?.value ?? 9}`, label: 'brands' },
-  { value: `${industriesStat?.value ?? 8}`, label: 'industries' },
-  { value: `${langStat?.value ?? 2}`, label: 'languages' },
+  { value: `${brandsStat?.value ?? 15}`, label: 'brands' },
+  { value: `${industriesStat?.value ?? 12}`, label: 'industries' },
+  { value: '2', label: 'languages' },
 ]
 
 const btn =
@@ -99,7 +98,7 @@ export default function Profile() {
                   <span>
                     <b className="font-semibold">{MINI_STATS[1].value}</b> {MINI_STATS[1].label}
                   </span>
-                  <span className="font-semibold">{langStat?.note ?? 'Hindi + English'}</span>
+                  <span className="font-semibold">Hindi + English</span>
                 </p>
                 <Bio className="mt-5 hidden text-[15px] leading-[1.45] sm:block" />
               </div>

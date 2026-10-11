@@ -1,6 +1,6 @@
 import { useInView } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { reels } from '../../data/site'
+import { realReels } from '../../data/site'
 import { cn } from '../../lib/hooks'
 import { Phone } from './Phone'
 import { ReelScreen } from './ReelScreen'
@@ -8,8 +8,10 @@ import { usePageVisible } from './usePageVisible'
 
 export function MobileReels({ reduce }: { reduce: boolean }) {
   const scroller = useRef<HTMLDivElement>(null)
+  const [focus, setFocus] = useState(0)
   const [active, setActive] = useState(0)
   const [pausedId, setPausedId] = useState<string | null>(null)
+  const [soundId, setSoundId] = useState<string | null>(null)
   const inView = useInView(scroller, { amount: 0.45 })
   const visible = usePageVisible()
 
@@ -17,6 +19,7 @@ export function MobileReels({ reduce }: { reduce: boolean }) {
     const el = scroller.current
     if (!el) return
     let raf = 0
+    let settle = 0
     const measure = () => {
       raf = 0
       const mid = el.scrollLeft + el.clientWidth / 2
@@ -30,7 +33,9 @@ export function MobileReels({ reduce }: { reduce: boolean }) {
           best = i
         }
       })
-      setActive(best)
+      setFocus(best)
+      window.clearTimeout(settle)
+      settle = window.setTimeout(() => setActive(best), 140)
     }
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(measure)
@@ -39,15 +44,28 @@ export function MobileReels({ reduce }: { reduce: boolean }) {
     return () => {
       el.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(raf)
+      window.clearTimeout(settle)
     }
   }, [])
 
-  const goTo = useCallback((i: number) => {
-    const el = scroller.current
-    const node = el?.children[i] as HTMLElement | undefined
-    if (!el || !node) return
-    el.scrollTo({ left: node.offsetLeft - (el.clientWidth - node.offsetWidth) / 2, behavior: reduce ? 'auto' : 'smooth' })
-  }, [reduce])
+  useEffect(() => {
+    setPausedId(null)
+    setSoundId(null)
+  }, [active])
+
+  useEffect(() => {
+    if (!inView || !visible) setSoundId(null)
+  }, [inView, visible])
+
+  const goTo = useCallback(
+    (i: number) => {
+      const el = scroller.current
+      const node = el?.children[i] as HTMLElement | undefined
+      if (!el || !node) return
+      el.scrollTo({ left: node.offsetLeft - (el.clientWidth - node.offsetWidth) / 2, behavior: reduce ? 'auto' : 'smooth' })
+    },
+    [reduce]
+  )
 
   return (
     <div className="relative mt-10">
@@ -59,27 +77,33 @@ export function MobileReels({ reduce }: { reduce: boolean }) {
         ref={scroller}
         className="no-scrollbar relative flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-[calc((100vw-min(66vw,300px))/2)] py-6"
       >
-        {reels.map((r, i) => {
+        {realReels.map((r, i) => {
           const on = i === active
+          const lit = i === focus
           return (
             <div
               key={r.id}
               className={cn(
                 'w-[min(66vw,300px)] shrink-0 snap-center snap-always transition-[transform,opacity] duration-500 ease-[var(--ease-expo)]',
-                on ? 'scale-100 opacity-100' : 'scale-[0.86] opacity-60'
+                lit ? 'scale-100 opacity-100' : 'scale-[0.86] opacity-60'
               )}
             >
               <Phone className="w-full" data-cursor="PLAY">
                 <ReelScreen
                   reel={r}
                   active={on}
+                  near={Math.abs(i - focus) <= 3}
                   paused={pausedId === r.id}
                   playing={on && pausedId !== r.id && inView && visible && !reduce}
+                  sound={soundId === r.id}
+                  onSound={(v) => {
+                    setSoundId(v ? r.id : null)
+                    if (v) setPausedId(null)
+                  }}
                   onTap={() => {
                     if (on) setPausedId((p) => (p === r.id ? null : r.id))
                     else goTo(i)
                   }}
-                  sizes="66vw"
                 />
               </Phone>
             </div>
@@ -88,25 +112,25 @@ export function MobileReels({ reduce }: { reduce: boolean }) {
       </div>
 
       <div className="mt-2 flex items-center justify-center">
-        {reels.map((r, i) => (
+        {realReels.map((r, i) => (
           <button
             key={r.id}
             type="button"
             aria-label={`Reel ${i + 1}: ${r.brand}`}
-            aria-current={i === active}
+            aria-current={i === focus}
             onClick={() => goTo(i)}
             className="flex h-11 w-7 items-center justify-center"
           >
             <span
               className={cn(
                 'block h-1.5 rounded-full transition-all duration-500 ease-[var(--ease-expo)]',
-                i === active ? 'w-5 bg-red' : 'w-1.5 bg-paper/30'
+                i === focus ? 'w-5 bg-red' : r.tag === 'AI edit' ? 'w-1.5 bg-red/45' : 'w-1.5 bg-paper/30'
               )}
             />
           </button>
         ))}
       </div>
-      <p className="kicker mt-1 text-center text-paper/40">Swipe · tap to pause · double-tap ♥</p>
+      <p className="kicker mt-1 text-center text-paper/40">Swipe · tap to pause · speaker for sound</p>
     </div>
   )
 }

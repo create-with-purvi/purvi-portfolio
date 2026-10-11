@@ -19,34 +19,6 @@
     linear-gradient(118deg, transparent 52%, rgba(255, 255, 255, 0.05) 58%, transparent 66%);
 }
 
-.reel-kb {
-  animation: reel-kb 3s cubic-bezier(0.3, 0.1, 0.4, 1) forwards;
-  will-change: transform;
-}
-
-@keyframes reel-kb {
-  from {
-    transform: translate3d(var(--kx0, 0%), var(--ky0, 0%), 0) scale(var(--ks0, 1));
-  }
-  to {
-    transform: translate3d(var(--kx1, 0%), var(--ky1, 0%), 0) scale(var(--ks1, 1.1));
-  }
-}
-
-.reel-progress {
-  animation: reel-progress 2200ms linear forwards;
-  transform-origin: left center;
-}
-
-@keyframes reel-progress {
-  from {
-    transform: scaleX(var(--from, 0));
-  }
-  to {
-    transform: scaleX(var(--to, 1));
-  }
-}
-
 .reel-marquee {
   animation: reel-marquee 7s linear infinite;
 }
@@ -83,11 +55,43 @@
   }
 }
 
+.reel-spark {
+  display: inline-block;
+  animation: reel-spark 2.4s ease-in-out infinite;
+}
+
+@keyframes reel-spark {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.35) rotate(90deg);
+  }
+}
+
+.reel-shine {
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translate3d(-120%, 0, 0);
+  animation: reel-shine 3s ease-in-out infinite;
+}
+
+@keyframes reel-shine {
+  0%,
+  55% {
+    transform: translate3d(-120%, 0, 0);
+  }
+  100% {
+    transform: translate3d(120%, 0, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .reel-kb,
   .reel-marquee,
   .reel-rec,
-  .reel-disc {
+  .reel-disc,
+  .reel-spark,
+  .reel-shine {
     animation: none;
   }
 }
