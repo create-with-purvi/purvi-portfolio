@@ -3,25 +3,25 @@ import { useRef } from 'react'
 import { Img } from '../../components/Img'
 import { byId } from '../../data/work'
 import { ui } from '../../lib/ui'
-import { CommentIcon, HeartIcon, PinIcon } from '../reels/icons'
+import { CarouselIcon, CommentIcon, HeartIcon, PinIcon } from '../reels/icons'
 
 export const GRID = [
-  'build-higher',
-  'summer-camp',
-  'navratri',
+  'lifting-india',
+  'vaswani-navratri',
+  'same-space',
+  'jalebi',
   'why-upgrad',
-  'ganesh-chaturthi',
+  'heavy-moves',
+  'summer-camp',
+  'luxury-feels',
+  'missing-tooth-1',
+  'chole-bhature',
+  'dream-high',
   'charcoal-panel',
-  'impossible',
   'her-future',
-  'har-khiladi',
-  'uv-marble-walls',
-  'republic-day',
-  'admission-open',
-  'doubts-to-confidence',
-  'sapno-ko-hakikat',
-  'makar-sankranti',
-].filter((id) => byId[id])
+  'db-navratri',
+  'modular-kitchen',
+].filter((id) => byId[id] && !byId[id].lowres)
 
 function rng(seed: number) {
   let a = seed >>> 0
@@ -97,8 +97,10 @@ function Tile({ id, i, reduce }: { id: string; i: number; reduce: boolean }) {
           className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-expo)] group-hover:scale-[1.04]"
         />
       </span>
-      {i < 2 && (
-        <PinIcon aria-hidden className="absolute right-2 top-2 h-4 w-4 rotate-45 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:h-5 sm:w-5" />
+      {item.carousel ? (
+        <CarouselIcon aria-hidden className="absolute right-2 top-2 h-4 w-4 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:h-5 sm:w-5" />
+      ) : (
+        i < 2 && <PinIcon aria-hidden className="absolute right-2 top-2 h-4 w-4 rotate-45 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:h-5 sm:w-5" />
       )}
       <span className={`pointer-events-none absolute inset-0 flex items-center justify-center gap-6 bg-black/45 ${round} text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100`}>
         <HeartIcon filled className="h-6 w-6" strokeWidth={0} />

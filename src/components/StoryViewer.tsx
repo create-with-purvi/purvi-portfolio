@@ -10,7 +10,7 @@ import {
 } from 'motion/react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { waLink } from '../data/site'
-import { byId, categories, inCategory, src } from '../data/work'
+import { byId, categories, inCategory, src, type WorkItem } from '../data/work'
 import { cn, ease, useMediaQuery } from '../lib/hooks'
 import { lockScroll, unlockScroll } from '../lib/lenis'
 import { ui, useUI } from '../lib/ui'
@@ -18,7 +18,23 @@ import { CloseIcon, HeartIcon, PauseIcon, PlayIcon } from '../sections/reels/ico
 import { usePageVisible } from '../sections/reels/usePageVisible'
 
 const DURATION = 5
-const GROUPS = categories.map((c) => ({ ...c, items: inCategory(c.id) })).filter((g) => g.items.length > 0)
+const slideNo = (id: string) => Number(/(\d+)$/.exec(id)?.[1] ?? 0)
+const ordered = (items: WorkItem[]) => {
+  const out: WorkItem[] = []
+  const seen = new Set<string>()
+  for (const it of items) {
+    if (!it.carousel) {
+      out.push(it)
+      continue
+    }
+    if (seen.has(it.carousel)) continue
+    seen.add(it.carousel)
+    out.push(...items.filter((x) => x.carousel === it.carousel).sort((a, b) => slideNo(a.id) - slideNo(b.id)))
+  }
+  return out
+}
+const isTall = (it: WorkItem) => Math.abs(it.w / it.h - 9 / 16) < 0.04
+const GROUPS = categories.map((c) => ({ ...c, items: ordered(inCategory(c.id)) })).filter((g) => g.items.length > 0)
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 const cubeEase = [0.55, 0.05, 0.25, 1] as const
 
@@ -456,14 +472,16 @@ function Face({
       className={cn('absolute inset-0 overflow-hidden bg-ink [backface-visibility:hidden]', rounded && 'rounded-2xl')}
       style={{ transform }}
     >
-      <img
-        src={src(it.id)}
-        alt=""
-        aria-hidden
-        draggable={false}
-        className="absolute inset-0 h-full w-full scale-125 object-cover blur-2xl brightness-[0.4] saturate-150"
-        style={{ backgroundColor: it.color }}
-      />
+      {!isTall(it) && (
+        <img
+          src={src(it.id)}
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="absolute inset-0 h-full w-full scale-125 object-cover blur-2xl brightness-[0.4] saturate-150"
+          style={{ backgroundColor: it.color }}
+        />
+      )}
       <img
         key={it.id}
         src={src(it.id, 'l')}
@@ -474,7 +492,7 @@ function Face({
         ref={(el) => {
           if (el && live && el.complete && el.naturalWidth) onLoaded(k)
         }}
-        className="absolute inset-0 h-full w-full object-contain"
+        className={cn('absolute inset-0 h-full w-full', isTall(it) ? 'object-cover' : 'object-contain')}
       />
 
       <motion.div
