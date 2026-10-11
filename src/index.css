@@ -24,6 +24,7 @@
     -webkit-tap-highlight-color: transparent;
     text-size-adjust: 100%;
     touch-action: manipulation;
+    scrollbar-gutter: stable;
   }
   body {
     background: var(--color-ink);

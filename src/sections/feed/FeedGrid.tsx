@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Img } from '../../components/Img'
 import type { WorkItem } from '../../data/work'
+import { cn } from '../../lib/hooks'
+import { CarouselGlyph } from './CarouselGlyph'
 
 const FIRST = 12
 
@@ -24,7 +26,18 @@ export function FeedGrid({ items, onOpen }: Props) {
             aria-label={`Open ${p.title} by ${p.brand}`}
             className="group mb-3 block w-full break-inside-avoid overflow-hidden rounded-xl bg-ink-2 transition-[translate,box-shadow] duration-500 ease-[var(--ease-expo)] hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-20px_rgba(0,0,0,0.9)] md:mb-4"
           >
-            <Img item={p} className="block h-auto w-full" sizes="(max-width: 768px) 50vw, 20vw" />
+            <span className="relative block">
+              <Img
+                item={p}
+                className={cn('block h-auto w-full', p.h / p.w > 1.3 && 'aspect-[4/5] object-cover')}
+                sizes="(max-width: 768px) 50vw, 20vw"
+              />
+              {p.carousel && (
+                <span className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-ink/45 text-white backdrop-blur-sm">
+                  <CarouselGlyph />
+                </span>
+              )}
+            </span>
           </button>
         ))}
       </div>

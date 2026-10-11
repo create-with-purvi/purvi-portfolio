@@ -9,12 +9,14 @@ import { FeedGrid } from './feed/FeedGrid'
 import { spreadOrder } from './feed/order'
 import type { FeedScene, FeedTile } from './feed/types'
 
-const wall = spreadOrder(posts)
+const leads = posts.filter((p) => !p.carousel || posts.find((q) => q.carousel === p.carousel) === p)
+const wall = spreadOrder(leads)
 const tiles: FeedTile[] = wall.map((p) => ({
   id: p.id,
   category: p.category,
   color: p.color,
   small: p.lowres,
+  carousel: !!p.carousel,
   url: src(p.id, 's'),
 }))
 
@@ -26,6 +28,7 @@ const options: FilterOption[] = [
 ]
 
 const inFilter = (filter: string) => (filter === 'all' ? posts : posts.filter((p) => p.category === filter))
+const leadsIn = (filter: string) => (filter === 'all' ? leads : leads.filter((p) => p.category === filter))
 
 function openPost(filter: string, id: string) {
   const list = inFilter(filter)
@@ -162,7 +165,7 @@ export default function FeedWall() {
               className="min-w-0 px-5 after:w-1 after:shrink-0 after:content-[''] md:px-0"
             />
           </div>
-          <FeedGrid items={visible} onOpen={(id) => openPost(filter, id)} />
+          <FeedGrid items={leadsIn(filter)} onOpen={(id) => openPost(filter, id)} />
         </div>
       )}
     </section>

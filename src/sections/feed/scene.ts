@@ -17,10 +17,9 @@ import {
 import { fragmentShader, vertexShader } from './shaders'
 import type { FeedScene, FeedSceneOptions } from './types'
 
-const COLS = 9
-const STAGGER = [0, 0.52, 0.16, 0.72, 0.34, 0.88, 0.06, 0.6, 0.26]
-const PARALLAX = [0, 0.04, -0.025, 0.05, -0.035, 0.025, -0.05, 0.035, -0.015]
-const ATLAS_COLS = 8
+const COLS = 10
+const STAGGER = [0, 0.52, 0.16, 0.72, 0.34, 0.88, 0.06, 0.6, 0.26, 0.8]
+const PARALLAX = [0, 0.04, -0.025, 0.05, -0.035, 0.025, -0.05, 0.035, -0.015, 0.045]
 const GUTTER = 4
 const SMALL_SCALE = 0.8
 const TAP_SLOP = 6
@@ -31,8 +30,13 @@ const damp = (from: number, to: number, rate: number, dt: number) => to + (from 
 const now = () => performance.now() / 1000
 
 export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: FeedSceneOptions): FeedScene {
-  const n = tiles.length
-  const rows = Math.ceil(n / COLS)
+  const uniq = tiles.length
+  const rows = Math.ceil(uniq / COLS)
+  const n = rows * COLS
+  const slotTile = Array.from({ length: n }, (_, s) =>
+    s < uniq ? s : (Math.floor(rows / 2) * COLS + Math.floor(COLS / 2) + (s - uniq) * 3) % uniq
+  )
+  const tileAt = (k: number) => slotTile[k % n]
   const cap = n * 4
   const coarse = matchMedia('(pointer: coarse)').matches
   const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches
@@ -49,15 +53,16 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
   const camera = new PerspectiveCamera(30, 1, 1, 10000)
 
   const sharp = !coarse && window.innerWidth >= 1024 && window.devicePixelRatio > 1.2
-  let cw = sharp ? 352 : 240
-  const atlasRows = Math.ceil(n / ATLAS_COLS)
-  const maxTex = renderer.capabilities.maxTextureSize
-  while ((cw + GUTTER * 2) * ATLAS_COLS > maxTex || (cw * 1.25 + GUTTER * 2) * atlasRows > maxTex) cw = Math.floor(cw * 0.75)
+  let cw = sharp ? 320 : coarse || window.innerWidth < 768 ? 224 : 256
+  const atlasCols = Math.ceil(Math.sqrt(uniq * 1.25))
+  const atlasRows = Math.ceil(uniq / atlasCols)
+  const maxTex = Math.min(renderer.capabilities.maxTextureSize, 4096)
+  while ((cw + GUTTER * 2) * atlasCols > maxTex || (cw * 1.25 + GUTTER * 2) * atlasRows > maxTex) cw = Math.floor(cw * 0.85)
   const ch = Math.round(cw * 1.25)
   const cellW = cw + GUTTER * 2
   const cellH = ch + GUTTER * 2
   const atlas = document.createElement('canvas')
-  atlas.width = cellW * ATLAS_COLS
+  atlas.width = cellW * atlasCols
   atlas.height = cellH * atlasRows
   const ctx = atlas.getContext('2d')!
   ctx.imageSmoothingQuality = 'high'
@@ -71,15 +76,16 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
   const geometry = new PlaneGeometry(1, 1, 14, 14)
   const aPos = new InstancedBufferAttribute(new Float32Array(cap * 2), 2).setUsage(DynamicDrawUsage)
   const aState = new InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(DynamicDrawUsage)
-  const aFx = new InstancedBufferAttribute(new Float32Array(cap * 2), 2).setUsage(DynamicDrawUsage)
+  const aFx = new InstancedBufferAttribute(new Float32Array(cap * 3), 3).setUsage(DynamicDrawUsage)
   const aAtlas = new InstancedBufferAttribute(new Float32Array(cap * 4), 4)
   const aColor = new InstancedBufferAttribute(new Float32Array(cap * 3), 3)
   const tmp = new Color()
   const base = new Float32Array(cap)
+  const flag = new Float32Array(cap)
   for (let k = 0; k < cap; k++) {
-    const i = k % n
-    const ac = i % ATLAS_COLS
-    const ar = Math.floor(i / ATLAS_COLS)
+    const i = tileAt(k)
+    const ac = i % atlasCols
+    const ar = Math.floor(i / atlasCols)
     aAtlas.setXYZW(
       k,
       (ac * cellW + GUTTER) / atlas.width,
@@ -90,6 +96,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
     tmp.set(tiles[i].color)
     aColor.setXYZ(k, tmp.r, tmp.g, tmp.b)
     base[k] = tiles[i].small ? SMALL_SCALE : 1
+    flag[k] = tiles[i].carousel ? 1 : 0
   }
   geometry.setAttribute('aPos', aPos)
   geometry.setAttribute('aState', aState)
@@ -112,6 +119,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
     uSplit: { value: 0.16 },
     uRed: { value: new Color('#f40816') },
     uFocus: { value: new Vector2() },
+    uIcon: { value: 8 },
   }
   const material = new ShaderMaterial({
     uniforms,
@@ -194,6 +202,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
     uniforms.uMargin.value = small ? 12 : 18
     uniforms.uRadius.value = small ? 10 : 16
     uniforms.uLag.value = small ? 0.8 : 1.1
+    uniforms.uIcon.value = small ? 6.5 : 8
   }
 
   function place() {
@@ -232,12 +241,13 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
 
   let disposed = false
   const ready: number[] = []
+  const uploaded = new Uint8Array(uniq)
   let dirty = false
-  let lastUpload = 0
+  let lastUpload = now()
 
   function drawTile(i: number, img: HTMLImageElement) {
-    const x = (i % ATLAS_COLS) * cellW
-    const y = Math.floor(i / ATLAS_COLS) * cellH
+    const x = (i % atlasCols) * cellW
+    const y = Math.floor(i / atlasCols) * cellH
     const s = Math.max(cellW / img.naturalWidth, cellH / img.naturalHeight)
     const dw = img.naturalWidth * s
     const dh = img.naturalHeight * s
@@ -252,7 +262,12 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
   layout()
   place()
 
-  const loadOrder = tiles.map((_, i) => i).sort((a, b) => Math.hypot(X[a], Y[a]) - Math.hypot(X[b], Y[b]))
+  const nearest = new Float32Array(uniq).fill(Infinity)
+  for (let k = 0; k < count; k++) {
+    const i = tileAt(k)
+    nearest[i] = Math.min(nearest[i], Math.hypot(X[k], Y[k] * 1.4))
+  }
+  const loadOrder = tiles.map((_, i) => i).sort((a, b) => nearest[a] - nearest[b])
   for (const i of loadOrder) {
     const img = new Image()
     img.decoding = 'async'
@@ -288,7 +303,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
       let best = -1
       let bestD = Infinity
       for (let k = 0; k < count; k++) {
-        if (tiles[k % n].category !== category) continue
+        if (tiles[tileAt(k)].category !== category) continue
         const d = Math.hypot(X[k], (Y[k] - cy) * 1.2)
         if (d < bestD) {
           bestD = d
@@ -302,7 +317,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
       }
     }
     for (let k = 0; k < cap; k++) {
-      const tile = tiles[k % n]
+      const tile = tiles[tileAt(k)]
       const match = !category || tile.category === category
       const d = k < count ? Math.hypot(X[k], Y[k]) : R
       pendAt[k] = t + Math.min(1.2, d / R) * 0.38
@@ -421,7 +436,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
     const tap = moved < TAP_SLOP && performance.now() - downAt < 700
     if (tap) {
       const k = hit(e.clientX, e.clientY)
-      if (k >= 0) onOpen(k % n)
+      if (k >= 0) onOpen(tileAt(k))
     } else if (mode === 'drag') throwWall()
     endPointer()
   }
@@ -554,11 +569,12 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
     hoverAny = damp(hoverAny, hovered >= 0 ? 1 : 0, 8, dt)
     uniforms.uHoverAny.value = hoverAny
 
-    if (dirty && t - lastUpload > (lastUpload ? 0.32 : 0.05)) {
+    if (dirty && (ready.length >= 12 || t - lastUpload > 0.5)) {
       dirty = false
       lastUpload = t
       texture.needsUpdate = true
-      for (const i of ready) for (let j = i; j < cap; j += n) loadedT[j] = 1
+      for (const i of ready) uploaded[i] = 1
+      for (let j = 0; j < cap; j++) if (uploaded[tileAt(j)]) loadedT[j] = 1
       ready.length = 0
     }
 
@@ -580,7 +596,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
       hov[j] = damp(hov[j], j === hovered ? 1 : 0, 9, dt)
       loaded[j] = damp(loaded[j], loadedT[j], 4.5, dt)
       aState.setXYZW(j, dim[j], glow[j], hov[j], loaded[j])
-      aFx.setXY(j, intro[j], base[j])
+      aFx.setXYZ(j, intro[j], base[j], flag[j])
     }
     aState.needsUpdate = true
     aFx.needsUpdate = true
@@ -668,6 +684,7 @@ export function createFeedScene({ host, tiles, onOpen, onFirstDrag, onLost }: Fe
       geometry.dispose()
       material.dispose()
       texture.dispose()
+      atlas.width = atlas.height = 0
       mesh.dispose()
       renderer.dispose()
       renderer.forceContextLoss()
