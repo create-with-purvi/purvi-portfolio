@@ -171,7 +171,7 @@ export default function Hero() {
             loading="eager"
             fetchPriority="high"
             draggable={false}
-            className="block h-[min(68svh,150vw)] w-auto max-w-none drop-shadow-[0_30px_50px_rgba(0,0,0,0.6)] md:h-[62svh] lg:h-[min(72svh,820px)]"
+            className="block h-[min(68svh,150vw)] w-auto max-w-none [filter:drop-shadow(0_0_18px_rgba(0,0,0,0.75))_drop-shadow(0_30px_50px_rgba(0,0,0,0.6))] md:h-[62svh] lg:h-[min(72svh,820px)]"
           />
         </motion.div>
       </motion.div>

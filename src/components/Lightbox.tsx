@@ -4,6 +4,7 @@ import { byId, src, type WorkItem } from '../data/work'
 import { cn, ease } from '../lib/hooks'
 import { lockScroll, unlockScroll } from '../lib/lenis'
 import { ui, useUI } from '../lib/ui'
+import { CarouselGlyph } from '../sections/feed/CarouselGlyph'
 import { Img } from './Img'
 
 type Pan = { offset: { x: number; y: number }; velocity: { x: number; y: number } }
@@ -180,6 +181,7 @@ function Viewer({ ids, start }: { ids: string[]; start: number }) {
   }
 
   const fit = fitSize(item, stage)
+  const slides = item.carousel ? ids.filter((id) => byId[id].carousel === item.carousel) : []
   const variants = reduce ? fadeOnly : slide
 
   return (
@@ -315,7 +317,7 @@ function Viewer({ ids, start }: { ids: string[]; start: number }) {
         style={{ opacity: chrome }}
         className="relative z-10 flex flex-col gap-4 px-5 pb-[max(env(safe-area-inset-bottom),18px)] md:flex-row md:items-end md:gap-10 md:px-10 md:pb-8"
       >
-        <div className="flex min-w-0 items-end justify-between gap-4 md:w-[34%] md:shrink-0">
+        <div className="flex min-w-0 items-end justify-between gap-4 md:w-[44%] md:shrink-0">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={item.id}
@@ -325,8 +327,18 @@ function Viewer({ ids, start }: { ids: string[]; start: number }) {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.35, ease }}
             >
-              <p className="kicker truncate text-red">{item.brand}</p>
-              <h3 className="display mt-2 line-clamp-2 pb-[0.04em] text-[clamp(1.75rem,3.4vw,3rem)] text-paper">{item.title}</h3>
+              <p className="kicker flex items-center gap-3 text-red">
+                <span className="truncate">{item.brand}</span>
+                {slides.length > 1 && (
+                  <span className="flex shrink-0 items-center gap-1.5 text-paper/70">
+                    <CarouselGlyph className="size-3" />
+                    <span className="tabular-nums">
+                      {slides.indexOf(item.id) + 1}/{slides.length}
+                    </span>
+                  </span>
+                )}
+              </p>
+              <h3 className="display mt-2 line-clamp-2 min-h-[1.9em] pb-[0.04em] leading-[0.95] text-[clamp(1.75rem,2.8vw,2.75rem)] text-paper md:line-clamp-1 md:min-h-0">{item.title}</h3>
             </motion.div>
           </AnimatePresence>
           {n > 1 && (
